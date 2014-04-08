@@ -8,7 +8,7 @@ angular
         'ngRoute',
         'dfUserManagement'
     ])
-    .constant('DSP_URL', 'http://192.168.1.16:8082')
+    .constant('DSP_URL', 'http://localhost:8082')
     .constant('DSP_API_KEY', 'admin')
     .config(['$httpProvider', 'DSP_API_KEY', function ($httpProvider, DSP_API_KEY) {
 
@@ -29,6 +29,23 @@ angular
             .when('/logout', {
                 templateUrl: 'views/logout.html',
                 controller: 'LogoutCtrl'
+            })
+            .when('/user-info', {
+                templateUrl: 'views/user-info.html',
+                controller: 'UserInfoCtrl',
+                resolve: {
+
+                    getUserData: ['$location', 'UserDataService', function($location, UserDataService) {
+
+                        if (!UserDataService.getCurrentUser()) {
+
+                            $location.url('/login')
+                        }else {
+
+                            return UserDataService.getCurrentUser();
+                        }
+                    }]
+                }
             })
             .otherwise({
                 redirectTo: '/'
