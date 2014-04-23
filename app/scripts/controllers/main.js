@@ -16,8 +16,7 @@ angular.module('angularjsAuthTutorialApp')
         $scope.$watch('currentUser', function(newValue, oldValue) {
 
             $scope.hasUser = !!newValue;
-        })
-
+        });
     }])
     .controller('MainCtrl', ['$scope', function ($scope) {
 
@@ -40,12 +39,9 @@ angular.module('angularjsAuthTutorialApp')
 
             $scope.$parent.currentUser = userDataObj;
             $location.url('/')
-        })
+        });
     }])
     .controller('UserInfoCtrl', ['$scope', 'getUserData', function($scope, getUserData) {
 
         $scope.userData = getUserData;
-
-
-
     }]);

@@ -8,7 +8,7 @@ angular
         'ngRoute',
         'dfUserManagement'
     ])
-    .constant('DSP_URL', 'http://localhost:8082')
+    .constant('DSP_URL', YOUR_DSP_URL_HERE)
     .constant('DSP_API_KEY', 'admin')
     .config(['$httpProvider', 'DSP_API_KEY', function ($httpProvider, DSP_API_KEY) {
 
@@ -39,7 +39,7 @@ angular
 
                         if (!UserDataService.getCurrentUser()) {
 
-                            $location.url('/login')
+                            $location.url('/login');
                         }else {
 
                             return UserDataService.getCurrentUser();
