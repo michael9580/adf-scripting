@@ -8,7 +8,7 @@ angular
         'ngRoute',
         'dfUserManagement'
     ])
-    .constant('DSP_URL', YOUR_DSP_URL_HERE)
+    .constant('DSP_URL', 'http://localhost:8081')
     .constant('DSP_API_KEY', 'admin')
     .config(['$httpProvider', 'DSP_API_KEY', function ($httpProvider, DSP_API_KEY) {
 
@@ -50,4 +50,23 @@ angular
             .otherwise({
                 redirectTo: '/'
             });
-    });
+    })
+    .config(['$provide', function($provide) {
+        $provide.decorator('$exceptionHandler', ['$delegate', '$injector', function($delegate, $injector) {
+            return function(exception) {
+
+
+                if (exception.provider === 'dreamfactory') {
+
+                    $injector.invoke(['$rootScope', function($rootScope) {
+
+                        $rootScope.$broadcast('error:dreamfactory',  exception);
+                    }]);
+                }
+                else {
+
+                    return $delegate(exception);
+                }
+            }
+        }])
+    }]);

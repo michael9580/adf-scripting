@@ -68,6 +68,15 @@
     </nav>
 
 
+    <!-- ADD ERROR DISPLAY -->
+    <div class="container-fluid">
+        <div data-ng-controller="ErrorCtrl">
+            <div data-ng-if="currentError" class="alert alert-danger alert-dismissable">
+                <button type="button" class="close" data-ng-click="clearError()" aria-hidden="true">&times;</button>
+                {{currentError}}
+            </div>
+        </div>
+    </div>
 
 
 

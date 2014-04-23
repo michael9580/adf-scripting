@@ -22,6 +22,9 @@ angular.module('angularjsAuthTutorialApp')
 
 
 
+
+
+
     }])
     .controller('LoginCtrl', ['$scope', '$location', 'UserEventsService', function($scope, $location, UserEventsService) {
 
@@ -44,4 +47,46 @@ angular.module('angularjsAuthTutorialApp')
     .controller('UserInfoCtrl', ['$scope', 'getUserData', function($scope, getUserData) {
 
         $scope.userData = getUserData;
+    }])
+    .controller('ErrorCtrl', ['$scope', function($scope) {
+
+        $scope.currentError = null;
+
+
+        $scope.parseDreamFactoryError = function (errorDataObj) {
+
+            var error = null;
+
+            if (typeof errorDataObj.exception === 'string') {
+
+                error = errorDataObj.exception;
+            }else {
+
+                if(errorDataObj.exception.data.error.length > 1) {
+
+                    angular.forEach(errorDataObj.exception.data.error, function(obj) {
+                        error += obj.message + '\n';
+                    })
+
+                }else {
+
+                    error = errorDataObj.exception.data.error[0].message;
+                }
+            }
+
+            return errorDataObj.module + ': ' + error
+
+        };
+
+        $scope.clearError = function() {
+
+            $scope.currentError = null;
+        };
+
+
+        $scope.$on('error:dreamfactory', function(e, errorMessageObj) {
+
+            $scope.currentError = $scope.parseDreamFactoryError(errorMessageObj);
+        });
+
     }]);
