@@ -30,6 +30,13 @@ angular
                 templateUrl: 'views/logout.html',
                 controller: 'LogoutCtrl'
             })
+            .when('/register', {
+                templateUrl: 'views/register.html',
+                controller: 'RegisterCtrl'
+            })
+            .when('/register-confirm', {
+                templateUrl: 'views/register-confirm.html'
+            })
             .when('/user-info', {
                 templateUrl: 'views/user-info.html',
                 controller: 'UserInfoCtrl',

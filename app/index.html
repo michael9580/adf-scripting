@@ -58,6 +58,7 @@
                     <div data-ng-controller="NavigationCtrl">
                         <ul class="nav navbar-nav">
                             <li data-ng-if="!hasUser"><a href="#/login">Login</a></li>
+                            <li data-ng-if="!hasUser"><a href="#/register">Register</a></li>
                             <li data-ng-if="hasUser"><a href="#/user-info">User Info</a></li>
                             <li data-ng-if="hasUser"><a href="#/logout">Logout</a></li>
                         </ul>

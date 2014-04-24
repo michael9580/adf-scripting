@@ -89,4 +89,27 @@ angular.module('angularjsAuthTutorialApp')
             $scope.currentError = $scope.parseDreamFactoryError(errorMessageObj);
         });
 
+    }])
+    .controller('RegisterCtrl', ['$scope', '$location', 'UserEventsService', function($scope, $location, UserEventsService) {
+
+
+        $scope.$on(UserEventsService.register.registerSuccess, function(e, userCredsObj) {
+
+            $scope.$broadcast(UserEventsService.login.loginRequest, userCredsObj);
+        });
+
+
+        $scope.$on(UserEventsService.register.registerConfirmation, function(e) {
+
+            $location.url('/register-confirm')
+        });
+
+
+        $scope.$on(UserEventsService.login.loginRequest, function(e, userDataObj) {
+
+            $scope.$parent.currentUser = userDataObj;
+            $location.url('/');
+        })
+
+
     }]);
