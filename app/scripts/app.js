@@ -9,8 +9,8 @@ angular.module('angularjsAuthTutorialApp', [
         'dfUserManagement'
     ])
     // Set our constants for our DreamFactory Modules
-    .constant('DSP_URL', /* ENTER_DSP_URL_HERE */)
-    .constant('DSP_API_KEY', /* ENTER_APP_NAME_HERE */)
+    .constant('DSP_URL', 'http://localhost:8083')
+    .constant('DSP_API_KEY', 'admin')
 
     // Configure AngularJS $http headers for the DSP
     // We pass in our DSP_API_KEY constant as the value of our header
@@ -69,6 +69,37 @@ angular.module('angularjsAuthTutorialApp', [
                             return UserDataService.getCurrentUser();
                         }
                     }]
+                }
+            })
+            .when('/script-test', {
+                templateUrl: 'views/script-test.html',
+                controller: 'ScriptTestCtrl',
+                resolve: {
+
+                    getEventList: ['DSP_URL', '$http', function(DSP_URL, $http) {
+
+                        return $http({
+
+                            method: 'GET',
+                            url: DSP_URL + '/rest/system/event',
+                            params: {
+                                all_events: true
+                            }
+                        });
+                    }],
+
+                    getSchemaService: ['DSP_URL', '$http', function (DSP_URL, $http) {
+
+                        var requestDataObj = {
+
+                        };
+
+                        return $http({
+                            method: 'GET',
+                            url: DSP_URL + '/rest/schema'
+                        });
+                    }]
+
                 }
             })
             .otherwise({

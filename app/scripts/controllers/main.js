@@ -201,7 +201,524 @@ angular.module('angularjsAuthTutorialApp')
             // redirect to the app home page
             $location.url('/');
         })
-    }]);
+    }])
+    .controller('ScriptTestCtrl', ['DSP_URL', '$scope', '$http', 'getEventList', 'getSchemaService', function (DSP_URL, $scope, $http, getEventList, getSchemaService) {
+
+        $scope.__getDataFromHttpResponse = function (httpResponseObj) {
+
+
+            if (httpResponseObj.hasOwnProperty('data')) {
+
+                if (httpResponseObj.data.hasOwnProperty('record')) {
+
+                    return httpResponseObj.data.record;
+
+                }else if (httpResponseObj.data.hasOwnProperty('resource')) {
+
+                    return httpResponseObj.data.resource;
+
+                }else {
+
+                    console.log("Take a look at the response.  Can't parse.")
+                    console.log(httpResponseObj);
+                }
+            }else {
+
+                console.log("No data prop in response");
+            }
+        };
+
+
+        // PUBLIC VARS
+        $scope.events = $scope.__getDataFromHttpResponse(getEventList);
+        $scope.schemaService = $scope.__getDataFromHttpResponse(getSchemaService);
+
+        $scope.serviceName = '/system/script';
+
+        $scope.currentEvent = '';
+
+        $scope.currentScript = '';
+        $scope.currentScriptPath = '';
+
+        $scope.eventList = [];
+
+
+        $scope.preprocessEventName = "pre_process";
+        $scope.postprocessEventName = "post_process";
+
+
+        // PRIVATE API
+
+        $scope._setScript = function (currentEventPathStr, currentScriptStr) {
+
+            $scope._setCurrentScript(currentScriptStr);
+            $scope._setCurrentScriptPath(currentEventPathStr, currentScriptStr);
+        };
+
+        $scope._setCurrentScriptPath = function(currentEventPathStr) {
+
+            $scope.currentScriptPath = currentEventPathStr;
+        };
+
+        $scope._setCurrentScript = function (scriptNameStr) {
+
+            $scope.currentScript = scriptNameStr;
+        };
+
+        $scope._createEventsList = function (event) {
+
+            var eventFound = false,
+                i = 0;
+
+            while(!eventFound && i < $scope.events.length) {
+
+                // $scope.events[i] becomes undefined inside of our .then()
+                // So we'll store it here
+                var theEvent = $scope.events[i];
+
+                if ($scope.events[i].name === event) {
+
+                    eventFound = true;
+
+                    $scope._getServiceFromServer().then(
+                        function (result) {
+
+                            var records = $scope.__getDataFromHttpResponse(result);
+
+                            if (records) {
+
+                                // Not sure why $scope.events[i[ is undefined at this point
+                                //console.log($scope.events[i])
+                                $scope._createEvents(theEvent, records);
+                            }
+
+
+                        },
+                        function (reject) {
+
+
+
+                        }
+                    );
+                    $scope.eventList = $scope.events[i];
+
+                }
+                i++
+            }
+        };
+
+        $scope._getServiceFromServer = function () {
+
+
+            return $http({
+                method: 'GET',
+                url: DSP_URL + '/rest/' + $scope.currentEvent.name
+            })
+        };
+
+        $scope._createEvents = function(event, associatedData) {
+
+            if (event.paths[1].path.indexOf("table_name") != "-1" ) {
+                angular.forEach(event.paths, function (path) {
+
+                    var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
+                    var pathIndex = path.path.lastIndexOf("/") + 1;
+                    var pathName = path.path.substr(pathIndex);
+
+                    angular.forEach(associatedData, function(obj) {
+
+                        var newpath = {};
+                        updateEvent = {"type": "put",
+                            "event": [
+                                event.name + "." + obj.name + ".update"
+                            ]};
+                        deleteEvent = {"type": "delete",
+                            "event": [
+                                event.name + "." + obj.name + ".delete"
+                            ]};
+                        insertEvent = {"type": "post",
+                            "event": [
+                                event.name + "." + obj.name + ".insert"
+                            ]};
+                        selectEvent = {"type": "get",
+                            "event": [
+                                event.name + "." + obj.name + ".select"
+                            ]};
+                        newpath.verbs = [];
+                        newpath.path = "/" + event.name + "/" + obj.name;
+
+                        path.verbs.forEach(function (verb) {
+                            preEvent = event.name + "." + obj.name + "." + verb.type + "." + "pre_process";
+                            preObj = {"type": verb.type, "event": [preEvent]};
+                            postEvent = event.name + "." + obj.name + "." + verb.type + "." + "post_process";
+                            postObj = {"type": verb.type, "event": [postEvent]};
+
+
+                            newpath.verbs.push(preObj);
+                            newpath.verbs.push(postObj);
+
+                        });
+
+                        var found = false;
+                        event.paths.forEach(function (pathObj) {
+
+                            if (pathObj.path === newpath.path) {
+                                found = true;
+                            }
+
+                        });
+
+                        if (!found) {
+    //                                            newpath.verbs.push(selectEvent);
+    //                                            newpath.verbs.push(insertEvent);
+    //                                            newpath.verbs.push(updateEvent);
+    //                                            newpath.verbs.push(deleteEvent);
+                            event.paths.push(newpath)
+                        }
+                    })
+                })
+            }
+            else if (event.paths[1].path.indexOf("container") != "-1") {
+
+                angular.forEach(event.paths, function (path) {
+
+                    var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
+                    var pathIndex = path.path.lastIndexOf("/") + 1;
+                    var pathName = path.path.substr(pathIndex);
+
+                    var newpath = {};
+                    angular.forEach(associatedData, function(obj) {
+                        newpath = {};
+                        updateEvent = {"type": "put",
+                            "event": [
+                                event.name + "." + obj.name + ".update"
+                            ]};
+                        deleteEvent = {"type": "delete",
+                            "event": [
+                                event.name + "." + obj.name + ".delete"
+                            ]};
+                        insertEvent = {"type": "post",
+                            "event": [
+                                event.name + "." + obj.name + ".insert"
+                            ]};
+                        selectEvent = {"type": "get",
+                            "event": [
+                                event.name + "." + obj.name + ".select"
+                            ]};
+                        newpath.verbs = [];
+                        newpath.path = "/" + event.name + "/" + obj.name;
+
+                        path.verbs.forEach(function (verb) {
+                            preEvent = event.name + "." + obj.name + "." + verb.type + "." + "pre_process";
+                            preObj = {"type": verb.type, "event": [preEvent]};
+                            postEvent = event.name + "." + obj.name + "." + verb.type + "." + "post_process";
+                            postObj = {"type": verb.type, "event": [postEvent]};
+
+
+                            newpath.verbs.push(preObj);
+                            newpath.verbs.push(postObj);
+
+                        });
+                        var found = false;
+                        event.paths.forEach(function (pathObj) {
+
+                            if (pathObj.path === newpath.path) {
+                                found = true;
+                            }
+
+                        });
+                        if (!found) {
+    //                                                newpath.verbs.push(selectEvent);
+    //                                                newpath.verbs.push(insertEvent);
+    //                                                newpath.verbs.push(updateEvent);
+    //                                                newpath.verbs.push(deleteEvent);
+                            event.paths.push(newpath)
+                        }
+
+                    });
+                });
+            }
+            else {
+                angular.forEach(event.paths, function (path) {
+
+                    var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
+                    var pathIndex = path.path.lastIndexOf("/") + 1;
+                    var pathName = path.path.substr(pathIndex);
+
+                    angular.forEach(path.verbs, function(verb){
+
+                        if (event.name !== pathName) {
+                            preEvent = event.name + "." + pathName + "." + verb.type + "." + "pre_process";
+                            postEvent = event.name + "." + pathName + "." + verb.type + "." + "post_process";
+                        } else {
+                            preEvent = pathName + "." + verb.type + "." + "pre_process";
+                            postEvent = pathName + "." + verb.type + "." + "post_process";
+                        }
+                        preObj = {"type": verb.type, "event": [preEvent]};
+                        postObj = {"type": verb.type, "event": [postEvent]};
+                        path.verbs.push(preObj);
+                        path.verbs.push(postObj);
+
+                    });
+                });
+            }
+        };
+
+
+
+
+        $scope._isStaticEvent = function (verb) {
+
+            if(verb.event[0].substr(verb.event[0].length - $scope.preprocessEventName.length, $scope.preprocessEventName.length) === $scope.preprocessEventName
+                || verb.event[0].substr(verb.event[0].length - $scope.postprocessEventName.length, $scope.postprocessEventName.length) === $scope.postprocessEventName){
+
+                return false;
+            }
+
+            return true;
+        };
+
+        $scope._isPreprocessEvent = function (verb) {
+
+            if(verb.event[0].substr(verb.event[0].length - $scope.preprocessEventName.length, $scope.preprocessEventName.length) === $scope.preprocessEventName) {
+                return true;
+            }
+
+            return false;
+        };
+
+        $scope._isPostprocessEvent = function (verb) {
+
+            if (verb.event[0].substr(verb.event[0].length - $scope.postprocessEventName.length, $scope.postprocessEventName.length) === $scope.postprocessEventName) {
+
+                return true;
+            }
+
+            return false;
+        };
+
+        $scope._isVariablePath = function (path) {
+
+            if (path.path.indexOf("}") != "-1") {
+
+                return true;
+            }
+
+            return false;
+        }
+
+        $scope._hasStaticEvent = function (path) {
+
+            var hasStaticEvent = false,
+                i = 0;
+
+            while (!hasStaticEvent && i < path.verbs.length ) {
+
+                if ($scope._isStaticEvent(path.verbs[i])) {
+
+                    hasStaticEvent = true;
+                }
+
+                i++;
+            }
+
+            return hasStaticEvent;
+        };
+
+        $scope._hasPreprocessEvent = function (path) {
+
+            var hasPreprocessEvent = false,
+                i = path.verbs.length - 1;
+
+            while (!hasPreprocessEvent && i >= 0) {
+
+                if ($scope._isPreprocessEvent(path.verbs[i])) {
+
+                    hasPreprocessEvent = true;
+                }
+
+                i--
+            }
+
+            return hasPreprocessEvent;
+        };
+
+        $scope._hasPostprocessEvent = function (path) {
+
+            var hasPostprocessEvent = false,
+                i = path.verbs.length - 1;
+
+
+            while (!hasPostprocessEvent && i >= 0) {
+
+                if ($scope._isPostprocessEvent(path.verbs[i])) {
+
+                    hasPostprocessEvent = true;
+
+                }
+
+                i--
+            }
+
+            return hasPostprocessEvent;
+        };
+
+
+
+        // COMPLEX IMPLEMENTATION
+
+
+
+        // WATCHERS AND INIT
+        var watchCurrentEvent = $scope.$watch('currentEvent', function (newValue, oldValue) {
+
+            if (!newValue) return false;
+
+            $scope._createEventsList(newValue.name);
+        });
+
+
+
+        // MESSAGES
+        $scope.$on('$destroy', function (e) {
+
+            watchCurrentEvent();
+        });
+
+    }])
+    .directive('dfAceEditor', ['DSP_URL', '$http', function (DSP_URL, $http) {
+
+        return {
+            restrict: 'E',
+            scope: {
+                serviceName: '=',
+                fileName: '=',
+                filePath: '='
+            },
+            templateUrl: 'views/df-ace-editor.html',
+            link: function (scope, elem, attrs) {
+
+
+
+                scope.editor = null;
+
+
+                scope._getFileFromServer = function (requestDataObj) {
+
+                    return $http({
+                        method: 'GET',
+                        url: DSP_URL + '/rest' + requestDataObj.serviceName + '/' + requestDataObj.fileName,
+                        cache: false
+                    })
+                };
+
+
+                scope._loadEditor = function (contents, mode) {
+
+                    scope.editor = ace.edit('ide');
+
+                    scope.editor.setTheme("ace/theme/twilight");
+
+                    if(mode){
+                        scope.editor.getSession().setMode("ace/mode/json");
+                    }else{
+                        scope.editor.getSession().setMode("ace/mode/javascript");
+                    }
+
+                    scope.editor.setValue(contents, -1);
+
+                    scope.editor.focus();
+                };
+
+
+
+
+                var watchScriptFileName = scope.$watch('fileName', function (newValue, oldValue) {
+
+
+                    if (!newValue) return false;
+
+                    var requestDataObj = {
+                        serviceName: scope.serviceName,
+                        fileName: newValue
+                    };
+
+                    scope._getFileFromServer(requestDataObj).then(
+                        function(result) {
+
+                            scope._loadEditor(result.data.script_body, false);
+
+                        },
+                        function(reject) {
+
+                            scope._loadEditor('', false);
+
+                        }
+                    )
+                });
+            }
+        }
+    }])
+    .directive('dreamfactoryAutoHeight', ['$window', '$route', function ($window) {
+
+        return {
+            restrict: 'A',
+            link: function (scope, elem, attrs) {
+
+                // Return jQuery window ref
+                scope._getWindow = function () {
+
+                    return $(window);
+                };
+
+                // Return jQuery document ref
+                scope._getDocument = function () {
+
+                    return $(document);
+                };
+
+
+                // Return jQuery window or document.  If neither justreturn the
+                // string value for the selector engine
+                scope._getParent = function(parentStr) {
+
+                    switch (parentStr) {
+                        case 'window':
+                            return scope._getWindow()
+                            break;
+
+                        case 'document':
+                            return scope._getDocument();
+                            break;
+
+                        default:
+                            return $(parentStr);
+                    }
+                };
+
+
+                // TODO: Element position/offset out of whack on route change.  Set explicitly.  Not the best move.
+                scope._setElementHeight = function () {
+                    angular.element(elem).css({
+                        height: scope._getParent(attrs.autoHeightParent).height() - 173 - attrs.autoHeightPadding
+                    });
+
+
+                    /*console.log(scope._getParent(attrs.autoHeightParent).height());
+                     console.log($(elem).offset().top)
+                     console.log(angular.element(elem).height())*/
+                };
+
+
+                scope._setElementHeight();
+
+                // set height on resize
+                angular.element($window).on('resize', function () {
+                    scope._setElementHeight();
+                });
+            }
+        }
+    }])
 
 
 // End main.js

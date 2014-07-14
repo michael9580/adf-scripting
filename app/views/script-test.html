@@ -1,0 +1,72 @@
+<div class="row">
+    <div class="col-xs-12">
+        <h1>Script Testing</h1>
+
+        <div class="form-group">
+            <select class="form-control" data-ng-model="currentEvent" data-ng-options="event as event.name for event in events">
+                <option value="">-- Select Event --</option>
+            </select>
+
+        </div>
+
+        <div class="btn-toolbar">
+            <div class="btn-group">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" >
+                        Static Events
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="menu1">
+                        <li data-ng-if="_hasStaticEvent(path) && !_isVariablePath(path)" class="dropdown-submenu" data-ng-repeat="path in eventList.paths">
+                            <a>{{path.path}}</a>
+                            <ul class="dropdown-menu" >
+                                <li data-ng-if="_isStaticEvent(verb)" data-ng-repeat="verb in path.verbs">
+                                    <a data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" >
+                        Preprocess Events
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="menu2">
+                        <li data-ng-if="_hasPreprocessEvent(path)  && !_isVariablePath(path)" class="dropdown-submenu" data-ng-repeat="path in eventList.paths">
+                            <a>{{path.path}}</a>
+                            <ul class="dropdown-menu">
+                                <li data-ng-if="_isPreprocessEvent(verb)" data-ng-repeat="verb in path.verbs">
+                                    <a data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" >
+                        Postprocess Events
+                        <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu" id="menu3">
+                        <li data-ng-if="_hasPostprocessEvent(path)  && !_isVariablePath(path)" class="dropdown-submenu" data-ng-repeat="path in eventList.paths">
+                            <a>{{path.path}}</a>
+                            <ul class="dropdown-menu">
+                                <li data-ng-if="_isPostprocessEvent(verb)" data-ng-repeat="verb in path.verbs">
+                                    <a data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<hr />
+
+
+<df-ace-editor data-service-name="serviceName" data-file-name="currentScript" data-file-path="currentScriptPath"></df-ace-editor>
+
+

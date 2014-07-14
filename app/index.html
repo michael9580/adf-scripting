@@ -15,7 +15,7 @@
     <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
     <!-- build:css styles/vendor.css -->
     <!-- bower:css -->
-    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css">
+    <link rel="stylesheet" href="bower_components/bootstrap/dist/css/bootstrap.css" />
     <!-- endbower -->
     <!-- endbuild -->
     <!-- build:css({.tmp,app}) styles/main.css -->
@@ -60,6 +60,7 @@
                             <li data-ng-if="!hasUser"><a href="#/login">Login</a></li>
                             <li data-ng-if="!hasUser"><a href="#/register">Register</a></li>
                             <li data-ng-if="hasUser"><a href="#/user-info">User Info</a></li>
+                            <li data-ng-if="hasUser"><a href="#/script-test">Script Testing</a></li>
                             <li data-ng-if="hasUser"><a href="#/logout">Logout</a></li>
                         </ul>
                     </div>
@@ -123,8 +124,8 @@
 <script src="bower_components/angular-cookies/angular-cookies.js"></script>
 <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
 <script src="bower_components/angular-route/angular-route.js"></script>
-
 <script src="bower_components/dreamfactory-user-management/dreamfactory-user-management.js"></script>
+<script src="scripts/ace/ace.js"></script>
 <!-- endbower -->
 <!-- endbuild -->
 
