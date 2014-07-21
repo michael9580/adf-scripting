@@ -229,6 +229,9 @@ angular.module('angularjsAuthTutorialApp')
         };
 
 
+        // @TODO: Problem with parsing email.  Nothing returned at the momment.  Need to fix httpresp func to deal with that scenario.
+
+
         // PUBLIC VARS
         $scope.events = $scope.__getDataFromHttpResponse(getEventList);
         $scope.schemaService = $scope.__getDataFromHttpResponse(getSchemaService);
@@ -236,6 +239,7 @@ angular.module('angularjsAuthTutorialApp')
         $scope.serviceName = '/system/script';
 
         $scope.currentEvent = '';
+        $scope.currentEventType = '';
 
         $scope.currentScript = '';
         $scope.currentScriptPath = '';
@@ -243,12 +247,72 @@ angular.module('angularjsAuthTutorialApp')
         $scope.eventList = [];
 
 
+        $scope.staticEventName = 'static';
         $scope.preprocessEventName = "pre_process";
         $scope.postprocessEventName = "post_process";
 
 
-        // PRIVATE API
+        $scope.eventTypes = {
+            staticEvent: {
+                name: 'static',
+                label: "Static"
+            },
+            preprocessEvent: {
+                name: 'pre_process',
+                label: 'Pre-Process'
+            },
+            postprocessEvent: {
+                name: 'post_process',
+                label: 'Post-Process'
+            }
+        };
 
+
+        $scope.menuOpen = true;
+        $scope.menuEventType = '';
+        $scope.menuEventPath = '';
+        $scope.menuLevel = 0;
+
+
+
+        // PUBLIC API
+        $scope.toggleMenu = function () {
+
+            $scope._toggleMenu();
+        };
+
+        $scope.setEvent = function (event) {
+
+            $scope._setEvent(event);
+        };
+
+        $scope.setEventType = function (eventType) {
+
+            $scope._setEventType(eventType);
+        };
+
+        $scope.setMenuEventPath = function (eventPath) {
+
+            $scope._setMenuEventPath(eventPath);
+        };
+
+        $scope.menuBack = function () {
+
+            $scope._menuBack();
+        };
+
+        $scope.save = function () {
+
+            $scope._save();
+        };
+
+        $scope.delete = function () {
+
+            $scope._delete();
+        };
+
+
+        // PRIVATE API
         $scope._setScript = function (currentEventPathStr, currentScriptStr) {
 
             $scope._setCurrentScript(currentScriptStr);
@@ -465,8 +529,45 @@ angular.module('angularjsAuthTutorialApp')
         };
 
 
+        // Menu Control
+        $scope._setMenuToggle = function (stateBool) {
+
+            $scope.menuOpen = stateBool;
+        };
+
+        $scope._toggleMenuState = function () {
+
+            $scope.menuOpen = !$scope.menuOpen;
+        };
+
+        $scope._setCurrentEvent = function (event) {
+
+            $scope.currentEvent = event;
+        };
+
+        $scope._setCurrentEventType = function (eventType) {
+
+            $scope.menuEventType = eventType;
+        };
+
+        $scope._setCurrentEventPath = function (eventPath) {
+
+            $scope.menuEventPath = eventPath;
+        };
+
+        $scope._incrementMenuLevel = function () {
+
+            $scope.menuLevel++;
+        };
+
+        $scope._decrementMenuLevel = function () {
+
+            $scope.menuLevel--;
+        };
 
 
+
+        // Event Sorting
         $scope._isStaticEvent = function (verb) {
 
             if(verb.event[0].substr(verb.event[0].length - $scope.preprocessEventName.length, $scope.preprocessEventName.length) === $scope.preprocessEventName
@@ -566,7 +667,70 @@ angular.module('angularjsAuthTutorialApp')
 
 
         // COMPLEX IMPLEMENTATION
+        $scope._toggleMenu = function() {
 
+            $scope._toggleMenuState();
+        };
+
+        $scope._setEvent = function (event) {
+
+            $scope._setCurrentEvent(event);
+            $scope._incrementMenuLevel();
+
+        };
+
+        $scope._setEventType = function (eventType)  {
+
+            $scope._setCurrentEventType(eventType);
+            $scope._incrementMenuLevel();
+
+        };
+
+        $scope._setMenuEventPath = function (eventPath) {
+
+            $scope._setCurrentEventPath(eventPath);
+            $scope._incrementMenuLevel();
+
+        };
+
+        $scope._menuBack = function () {
+
+            if ($scope.menuLevel > 0) {
+
+                $scope._decrementMenuLevel();
+
+
+                switch($scope.menuLevel) {
+
+                    case 0:
+                        $scope._setCurrentEvent('');
+                        $scope._setCurrentEventType('');
+                        $scope._setCurrentEventPath('');
+                        break;
+
+                    case 1:
+                        $scope._setCurrentEventType('');
+                        $scope._setCurrentEventPath('');
+
+                    case 2:
+                        $scope._setCurrentEventPath('');
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+        };
+
+        $scope._save = function () {
+
+            $scope.$broadcast('save:script');
+        };
+
+        $scope._delete = function () {
+
+            $scope.$broadcast('delete:script');
+        };
 
 
         // WATCHERS AND INIT
@@ -576,7 +740,6 @@ angular.module('angularjsAuthTutorialApp')
 
             $scope._createEventsList(newValue.name);
         });
-
 
 
         // MESSAGES
@@ -601,14 +764,42 @@ angular.module('angularjsAuthTutorialApp')
 
 
                 scope.editor = null;
+                scope.currentScriptObj = '';
 
 
+                // PRIVATE API
                 scope._getFileFromServer = function (requestDataObj) {
 
                     return $http({
                         method: 'GET',
                         url: DSP_URL + '/rest' + requestDataObj.serviceName + '/' + requestDataObj.fileName,
                         cache: false
+                    })
+                };
+
+                scope._saveFileOnServer = function (requestDataObj) {
+
+                    return $http({
+                        method: 'PUT',
+                        url: DSP_URL + '/rest' + requestDataObj.serviceName + '/' + requestDataObj.fileName,
+                        headers: {
+                            'Content-Type': 'text/plain'
+                        },
+                        data: {
+                            post_body: requestDataObj.body
+                        }
+                    })
+                };
+
+                scope._deleteFileOnServer = function (requestDataObj) {
+
+                    return $http({
+
+                        method: 'DELETE',
+                        url: DSP_URL + '/rest' + requestDataObj.serviceName + '/' + requestDataObj.fileName,
+                        params: {
+                            script_id:requestDataObj.scriptId
+                        }
                     })
                 };
 
@@ -632,9 +823,9 @@ angular.module('angularjsAuthTutorialApp')
 
 
 
+                // WATCHERS AND INIT
 
                 var watchScriptFileName = scope.$watch('fileName', function (newValue, oldValue) {
-
 
                     if (!newValue) return false;
 
@@ -646,6 +837,7 @@ angular.module('angularjsAuthTutorialApp')
                     scope._getFileFromServer(requestDataObj).then(
                         function(result) {
 
+                            scope.currentScript = result.data;
                             scope._loadEditor(result.data.script_body, false);
 
                         },
@@ -653,6 +845,54 @@ angular.module('angularjsAuthTutorialApp')
 
                             scope._loadEditor('', false);
 
+                        }
+                    )
+                });
+
+
+                // MESSAGES
+                scope.$on('$destroy', function (e) {
+
+                    watchScriptFileName();
+                });
+
+                scope.$on('save:script', function(e) {
+
+                    var requestDataObj = {
+                            serviceName: scope.serviceName,
+                            fileName: scope.fileName,
+                            body:  scope.editor.getValue() || " "
+                        };
+
+                    scope._saveFileOnServer(requestDataObj).then(
+                        function(result) {
+
+                            // @TODO: Handle Success
+                        },
+                        function(reject) {
+
+                            console.log(reject)
+                        }
+                    )
+                });
+
+                scope.$on('delete:script', function (e) {
+
+                    var requestDataObj = {
+                        serviceName: scope.serviceName,
+                        fileName: scope.fileName,
+                        scriptId:  scope.currentScriptObj.script_id
+                    };
+
+                    scope._deleteFileOnServer(requestDataObj).then(
+                        function(result) {
+
+                            scope.editor.setValue('', false);
+                        },
+                        function(reject) {
+
+                            // @TODO: Handle failure
+                            //console.log(reject)
                         }
                     )
                 });
