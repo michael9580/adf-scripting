@@ -56,57 +56,64 @@
                             <a class="list-group-item"
                                data-ng-if="_hasStaticEvent(path) && !_isVariablePath(path)"
                                data-ng-repeat="path in eventList.paths"
-                               data-ng-click="setMenuEventPath(path)">{{path.path}}</a>
+                               data-ng-click="setEventPath(path)">{{path.path}}</a>
                         </div>
 
                         <div class="list-group" data-ng-show="menuLevel === 2 && menuEventType.name === 'pre_process' && menuEventPath === '' ">
                             <a class="list-group-item"
                                data-ng-if="_hasPreprocessEvent(path) && !_isVariablePath(path)"
                                data-ng-repeat="path in eventList.paths"
-                               data-ng-click="setMenuEventPath(path)">{{path.path}}</a>
+                               data-ng-click="setEventPath(path)">{{path.path}}</a>
                         </div>
 
                         <div class="list-group" data-ng-show="menuLevel === 2 && menuEventType.name === 'post_process' && menuEventPath === '' ">
                             <a class="list-group-item"
                                data-ng-if="_hasPostprocessEvent(path) && !_isVariablePath(path)"
                                data-ng-repeat="path in eventList.paths"
-                               data-ng-click="setMenuEventPath(path)">{{path.path}}</a>
+                               data-ng-click="setEventPath(path)">{{path.path}}</a>
                         </div>
 
 
 
                         <!-- This can be combined into one block of code and use universal typing function -->
-                        <div class="list-group" data-ng-show="menuLevel === 3 && menuEventType.name === 'static' && menuEventPath !== '' ">
+                        <div class="list-group" data-ng-show="menuLevel >= 3 && menuEventType.name === 'static' && menuEventPath !== '' ">
                             <span
                                     data-ng-if="_isStaticEvent(verb)"
                                     data-ng-repeat="verb in menuEventPath.verbs">
-                                <a class="list-group-item" data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                <a class="list-group-item" data-ng-click="setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
                             </span>
                         </div>
 
-                        <div class="list-group" data-ng-show="menuLevel === 3 && menuEventType.name === 'pre_process' && menuEventPath !== '' ">
+                        <div class="list-group" data-ng-show="menuLevel >= 3 && menuEventType.name === 'pre_process' && menuEventPath !== '' ">
                             <span
                                     data-ng-if="_isPreprocessEvent(verb)"
                                     data-ng-repeat="verb in menuEventPath.verbs">
-                                <a class="list-group-item" data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                <a class="list-group-item" data-ng-click="setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
                             </span>
                         </div>
 
-                        <div class="list-group" data-ng-show="menuLevel === 3 && menuEventType.name === 'post_process' && menuEventPath !== '' ">
+                        <div class="list-group" data-ng-show="menuLevel >= 3 && menuEventType.name === 'post_process' && menuEventPath !== '' ">
                             <span
                                     data-ng-if="_isPostprocessEvent(verb)"
                                     data-ng-repeat="verb in menuEventPath.verbs">
-                                <a class="list-group-item" data-ng-click="_setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
+                                <a class="list-group-item" data-ng-click="setScript(path.path, event)" data-ng-repeat="event in verb.event">{{event}}</a>
                             </span>
                         </div>
                     </div>
-
                 </div>
             </div>
 
 
             <div data-ng-class="menuOpen ? 'hidden-xs col-sm-7 col-md-8' : 'col-sm-12'">
-                <df-ace-editor data-service-name="serviceName" data-file-name="currentScript" data-file-path="currentScriptPath"></df-ace-editor>
+
+                <ol class="breadcrumb">
+                    <li data-ng-repeat="path in breadcrumbs track by $index" data-ng-class="breadcrumbs.length -1 === $index ? 'active':''">
+                        <a data-ng-click="_bcJumpTo($index)" data-ng-if="breadcrumbs.length -1 !== $index">{{path}}</a>
+                        <span data-ng-if="breadcrumbs.length -1 === $index">{{path}}</span>
+                    </li>
+                </ol>
+
+                <df-ace-editor data-service-name="serviceName" data-file-name="currentScript" data-file-path="currentScriptPath" data-is-clean="isClean"></df-ace-editor>
             </div>
         </div>
 

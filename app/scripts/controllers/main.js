@@ -273,6 +273,9 @@ angular.module('angularjsAuthTutorialApp')
         $scope.menuEventPath = '';
         $scope.menuLevel = 0;
 
+        $scope.breadcrumbs = [];
+
+        $scope.isClean = true;
 
 
         // PUBLIC API
@@ -291,10 +294,15 @@ angular.module('angularjsAuthTutorialApp')
             $scope._setEventType(eventType);
         };
 
-        $scope.setMenuEventPath = function (eventPath) {
+        $scope.setEventPath = function (eventPath) {
 
-            $scope._setMenuEventPath(eventPath);
+            $scope._setEventPath(eventPath);
         };
+
+        $scope.setScript = function (path, event) {
+
+            $scope._setScript(path, event);
+        }
 
         $scope.menuBack = function () {
 
@@ -308,16 +316,13 @@ angular.module('angularjsAuthTutorialApp')
 
         $scope.delete = function () {
 
-            $scope._delete();
+            if ($scope._confirmDeleteScript()) {
+                $scope._delete();
+            }
         };
 
 
         // PRIVATE API
-        $scope._setScript = function (currentEventPathStr, currentScriptStr) {
-
-            $scope._setCurrentScript(currentScriptStr);
-            $scope._setCurrentScriptPath(currentEventPathStr, currentScriptStr);
-        };
 
         $scope._setCurrentScriptPath = function(currentEventPathStr) {
 
@@ -380,10 +385,22 @@ angular.module('angularjsAuthTutorialApp')
             })
         };
 
+        $scope._stripLeadingSlash = function (path) {
+
+            if (path.path.substring(0,1) === '/') {
+                path.path = path.path.slice(1, path.path.length);
+
+            }
+        };
+
         $scope._createEvents = function(event, associatedData) {
 
             if (event.paths[1].path.indexOf("table_name") != "-1" ) {
                 angular.forEach(event.paths, function (path) {
+
+
+                   $scope._stripLeadingSlash(path);
+
 
                     var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
                     var pathIndex = path.path.lastIndexOf("/") + 1;
@@ -446,6 +463,9 @@ angular.module('angularjsAuthTutorialApp')
 
                 angular.forEach(event.paths, function (path) {
 
+                    $scope._stripLeadingSlash(path);
+
+
                     var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
                     var pathIndex = path.path.lastIndexOf("/") + 1;
                     var pathName = path.path.substr(pathIndex);
@@ -505,6 +525,8 @@ angular.module('angularjsAuthTutorialApp')
             else {
                 angular.forEach(event.paths, function (path) {
 
+                    $scope._stripLeadingSlash(path);
+
                     var preEvent, postEvent, preObj, postObj, deleteEvent, selectEvent, updateEvent, insertEvent;
                     var pathIndex = path.path.lastIndexOf("/") + 1;
                     var pathName = path.path.substr(pathIndex);
@@ -525,6 +547,25 @@ angular.module('angularjsAuthTutorialApp')
 
                     });
                 });
+            }
+        };
+
+        $scope._confirmCloseScript = function () {
+
+            return confirm('Save script before closing?');
+        };
+
+        $scope._confirmDeleteScript = function () {
+
+            return confirm("Delete script?");
+        }
+
+        $scope._closeScript = function () {
+
+            if (!$scope.isClean) {
+                if ($scope._confirmCloseScript()) {
+                    $scope.save();
+                }
             }
         };
 
@@ -565,6 +606,93 @@ angular.module('angularjsAuthTutorialApp')
             $scope.menuLevel--;
         };
 
+        $scope._setMenuLevel = function (levelInt) {
+
+            $scope.menuLevel = levelInt;
+        };
+
+        $scope._jumpToMenu = function (index) {
+
+
+            index = index || null;
+
+            switch($scope.menuLevel) {
+
+                case 0:
+                    $scope._setCurrentEvent('');
+                    $scope._setCurrentEventType('');
+                    $scope._setCurrentEventPath('');
+                    $scope._setCurrentScript('');
+
+                    if (index) {
+                        $scope._bcRemovePaths(index);
+                    }else {
+                        $scope._bcRemovePath();
+                    }
+
+                    break;
+
+                case 1:
+                    $scope._setCurrentEventType('');
+                    $scope._setCurrentEventPath('');
+                    $scope._setCurrentScript('');
+
+                    if (index) {
+                        $scope._bcRemovePaths(index);
+                    }else {
+                        $scope._bcRemovePath();
+                    }
+                    break;
+
+                case 2:
+                    $scope._setCurrentEventPath('');
+                    $scope._setCurrentScript('');
+
+                    if (index) {
+                        $scope._bcRemovePaths(index);
+                    }else {
+                        $scope._bcRemovePath();
+                    }
+                    break;
+
+                case 3:
+                    $scope._closeScript();
+                    $scope._setCurrentScript('');
+                    $scope._bcRemovePath();
+                    break;
+
+                default:
+            }
+        }
+
+
+        // Breadcrumbs
+        $scope._bcAddPath = function (bcPathStr) {
+
+            $scope.breadcrumbs.push(bcPathStr);
+        };
+
+        $scope._bcRemovePath = function () {
+
+            $scope.breadcrumbs.pop();
+        };
+
+        $scope._bcRemovePaths = function (index) {
+
+            $scope.breadcrumbs.splice(index, $scope.breadcrumbs.length - index);
+        }
+
+        $scope._bcReplaceLastPath = function(newPathStr) {
+
+            $scope.breadcrumbs[$scope.breadcrumbs.length - 1] = newPathStr;
+        };
+
+        $scope._bcJumpTo = function (index) {
+
+            $scope._closeScript();
+            $scope._setMenuLevel(index + 1);
+            $scope._jumpToMenu(index + 1);
+        };
 
 
         // Event Sorting
@@ -675,6 +803,7 @@ angular.module('angularjsAuthTutorialApp')
         $scope._setEvent = function (event) {
 
             $scope._setCurrentEvent(event);
+            $scope._bcAddPath(event.name);
             $scope._incrementMenuLevel();
 
         };
@@ -682,44 +811,47 @@ angular.module('angularjsAuthTutorialApp')
         $scope._setEventType = function (eventType)  {
 
             $scope._setCurrentEventType(eventType);
+            $scope._bcAddPath(eventType.name);
             $scope._incrementMenuLevel();
 
         };
 
-        $scope._setMenuEventPath = function (eventPath) {
+        $scope._setEventPath = function (eventPath) {
 
             $scope._setCurrentEventPath(eventPath);
+            $scope._bcAddPath(eventPath.path);
             $scope._incrementMenuLevel();
+
+        };
+
+        $scope._setScript = function (currentEventPathStr, currentScriptStr) {
+
+            if (!$scope.currentScript) {
+                $scope._bcAddPath(currentScriptStr);
+                $scope._incrementMenuLevel();
+            }else {
+
+                if ($scope.isClean) {
+
+                    $scope._bcReplaceLastPath(currentScriptStr);
+
+                }else {
+                    $scope._closeScript()
+                        $scope._bcReplaceLastPath(currentScriptStr);
+                }
+            }
+
+            $scope._setCurrentScript(currentScriptStr);
+            $scope._setCurrentScriptPath(currentEventPathStr);
 
         };
 
         $scope._menuBack = function () {
 
-            if ($scope.menuLevel > 0) {
+            if ($scope.menuLevel === 0) return false;
 
-                $scope._decrementMenuLevel();
-
-
-                switch($scope.menuLevel) {
-
-                    case 0:
-                        $scope._setCurrentEvent('');
-                        $scope._setCurrentEventType('');
-                        $scope._setCurrentEventPath('');
-                        break;
-
-                    case 1:
-                        $scope._setCurrentEventType('');
-                        $scope._setCurrentEventPath('');
-
-                    case 2:
-                        $scope._setCurrentEventPath('');
-                        break;
-
-                    default:
-                        break;
-                }
-            }
+            $scope._decrementMenuLevel();
+            $scope._jumpToMenu();
         };
 
         $scope._save = function () {
@@ -756,7 +888,8 @@ angular.module('angularjsAuthTutorialApp')
             scope: {
                 serviceName: '=',
                 fileName: '=',
-                filePath: '='
+                filePath: '=',
+                isClean: '='
             },
             templateUrl: 'views/df-ace-editor.html',
             link: function (scope, elem, attrs) {
@@ -803,31 +936,71 @@ angular.module('angularjsAuthTutorialApp')
                     })
                 };
 
+                scope._setEditorInactive = function (stateBool) {
 
-                scope._loadEditor = function (contents, mode) {
+                    if (stateBool) {
+
+                        scope.editor.setOptions({
+                            readOnly: true,
+                            highlightActiveLine: false,
+                            highlightGutterLine: false
+                        })
+                        scope.editor.renderer.$cursorLayer.element.style.opacity=0;
+                    }else {
+                        scope.editor.setOptions({
+                            readOnly: false,
+                            highlightActiveLine: true,
+                            highlightGutterLine: true
+                        })
+                        scope.editor.renderer.$cursorLayer.element.style.opacity=100;
+                    }
+                };
+
+                scope._loadEditor = function (contents, mode, inactive) {
+
+                    inactive = inactive || false;
 
                     scope.editor = ace.edit('ide');
 
                     scope.editor.setTheme("ace/theme/twilight");
 
                     if(mode){
-                        scope.editor.getSession().setMode("ace/mode/json");
+                        scope.editor.session.setMode("ace/mode/json");
                     }else{
-                        scope.editor.getSession().setMode("ace/mode/javascript");
+                        scope.editor.session.setMode("ace/mode/javascript");
                     }
 
-                    scope.editor.setValue(contents, -1);
+                    scope._setEditorInactive(inactive);
+
+
+                    scope.editor.session.setValue(contents);
 
                     scope.editor.focus();
+
+                    scope.editor.on('input', function() {
+                        scope.$apply(function() {
+                            scope.isClean = scope.editor.session.getUndoManager().isClean();
+
+                        })
+                    });
                 };
 
+                scope._cleanEditor = function () {
+
+                    scope.editor.session.getUndoManager().reset();
+                    scope.editor.session.getUndoManager().markClean();
+                };
 
 
                 // WATCHERS AND INIT
 
                 var watchScriptFileName = scope.$watch('fileName', function (newValue, oldValue) {
 
-                    if (!newValue) return false;
+                    if (!newValue) {
+                        console.log("no valiue");
+                        scope._loadEditor('', false, true);
+                        return false;
+                    }
 
                     var requestDataObj = {
                         serviceName: scope.serviceName,
@@ -840,6 +1013,8 @@ angular.module('angularjsAuthTutorialApp')
                             scope.currentScript = result.data;
                             scope._loadEditor(result.data.script_body, false);
 
+
+
                         },
                         function(reject) {
 
@@ -848,6 +1023,7 @@ angular.module('angularjsAuthTutorialApp')
                         }
                     )
                 });
+
 
 
                 // MESSAGES
@@ -867,6 +1043,7 @@ angular.module('angularjsAuthTutorialApp')
                     scope._saveFileOnServer(requestDataObj).then(
                         function(result) {
 
+                            scope._cleanEditor();
                             // @TODO: Handle Success
                         },
                         function(reject) {
@@ -888,6 +1065,7 @@ angular.module('angularjsAuthTutorialApp')
                         function(result) {
 
                             scope.editor.setValue('', false);
+                            scope._cleanEditor();
                         },
                         function(reject) {
 
