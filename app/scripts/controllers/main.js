@@ -690,6 +690,7 @@ angular.module('angularjsAuthTutorialApp')
         $scope._bcJumpTo = function (index) {
 
             $scope._closeScript();
+            $scope._setMenuToggle(true);
             $scope._setMenuLevel(index + 1);
             $scope._jumpToMenu(index + 1);
         };
