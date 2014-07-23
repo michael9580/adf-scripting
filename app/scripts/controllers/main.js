@@ -202,10 +202,10 @@ angular.module('angularjsAuthTutorialApp')
             $location.url('/');
         })
     }])
-    .controller('ScriptTestCtrl', ['DSP_URL', '$scope', '$http', 'getEventList', 'getSchemaService', function (DSP_URL, $scope, $http, getEventList, getSchemaService) {
+    .controller('ScriptTestCtrl', ['DSP_URL', '$scope', '$http', 'getEventList', 'getRecentScripts', 'getSchemaService', function (DSP_URL, $scope, $http, getEventList, getRecentScripts, getSchemaService) {
+
 
         $scope.__getDataFromHttpResponse = function (httpResponseObj) {
-
 
             if (httpResponseObj.hasOwnProperty('data')) {
 
@@ -234,6 +234,8 @@ angular.module('angularjsAuthTutorialApp')
 
         // PUBLIC VARS
         $scope.events = $scope.__getDataFromHttpResponse(getEventList);
+        $scope.recentScripts = $scope.__getDataFromHttpResponse(getRecentScripts);
+
         $scope.schemaService = $scope.__getDataFromHttpResponse(getSchemaService);
 
         $scope.serviceName = '/system/script';
@@ -245,7 +247,6 @@ angular.module('angularjsAuthTutorialApp')
         $scope.currentScriptPath = '';
 
         $scope.eventList = [];
-
 
         $scope.staticEventName = 'static';
         $scope.preprocessEventName = "pre_process";
@@ -277,6 +278,7 @@ angular.module('angularjsAuthTutorialApp')
 
         $scope.isClean = true;
 
+        $scope.pathFilter = '';
 
         // PUBLIC API
         $scope.toggleMenu = function () {
@@ -345,7 +347,7 @@ angular.module('angularjsAuthTutorialApp')
                 // So we'll store it here
                 var theEvent = $scope.events[i];
 
-                if ($scope.events[i].name === event) {
+                if ($scope.events[i].name === event ) {
 
                     eventFound = true;
 
@@ -542,6 +544,7 @@ angular.module('angularjsAuthTutorialApp')
                         }
                         preObj = {"type": verb.type, "event": [preEvent]};
                         postObj = {"type": verb.type, "event": [postEvent]};
+
                         path.verbs.push(preObj);
                         path.verbs.push(postObj);
 
@@ -619,7 +622,6 @@ angular.module('angularjsAuthTutorialApp')
             switch($scope.menuLevel) {
 
                 case 0:
-                    $scope._setCurrentEvent('');
                     $scope._setCurrentEventType('');
                     $scope._setCurrentEventPath('');
                     $scope._setCurrentScript('');
@@ -630,6 +632,7 @@ angular.module('angularjsAuthTutorialApp')
                         $scope._bcRemovePath();
                     }
 
+                    $scope._clearFilter();
                     break;
 
                 case 1:
@@ -642,6 +645,8 @@ angular.module('angularjsAuthTutorialApp')
                     }else {
                         $scope._bcRemovePath();
                     }
+
+                    $scope._clearFilter();
                     break;
 
                 case 2:
@@ -653,12 +658,15 @@ angular.module('angularjsAuthTutorialApp')
                     }else {
                         $scope._bcRemovePath();
                     }
+
+                    $scope._clearFilter();
                     break;
 
                 case 3:
                     $scope._closeScript();
                     $scope._setCurrentScript('');
                     $scope._bcRemovePath();
+                    $scope._clearFilter();
                     break;
 
                 default:
@@ -794,6 +802,13 @@ angular.module('angularjsAuthTutorialApp')
         };
 
 
+        // Filtering
+        $scope._clearFilter = function () {
+
+            $scope.pathFilter = '';
+        };
+
+
 
         // COMPLEX IMPLEMENTATION
         $scope._toggleMenu = function() {
@@ -805,6 +820,7 @@ angular.module('angularjsAuthTutorialApp')
 
             $scope._setCurrentEvent(event);
             $scope._bcAddPath(event.name);
+            $scope._clearFilter();
             $scope._incrementMenuLevel();
 
         };
@@ -813,6 +829,7 @@ angular.module('angularjsAuthTutorialApp')
 
             $scope._setCurrentEventType(eventType);
             $scope._bcAddPath(eventType.name);
+            $scope._clearFilter();
             $scope._incrementMenuLevel();
 
         };
@@ -821,6 +838,7 @@ angular.module('angularjsAuthTutorialApp')
 
             $scope._setCurrentEventPath(eventPath);
             $scope._bcAddPath(eventPath.path);
+            $scope._clearFilter();
             $scope._incrementMenuLevel();
 
         };
@@ -998,7 +1016,6 @@ angular.module('angularjsAuthTutorialApp')
                 var watchScriptFileName = scope.$watch('fileName', function (newValue, oldValue) {
 
                     if (!newValue) {
-                        console.log("no valiue");
                         scope._loadEditor('', false, true);
                         return false;
                     }

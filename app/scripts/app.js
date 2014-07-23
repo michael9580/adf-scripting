@@ -88,6 +88,17 @@ angular.module('angularjsAuthTutorialApp', [
                         });
                     }],
 
+                    getRecentScripts: ['DSP_URL', '$http', function(DSP_URL, $http) {
+
+
+                        return $http({
+                            method: 'GET',
+                            url: DSP_URL + '/rest/system/script'
+                        });
+
+
+                    }],
+
                     getSchemaService: ['DSP_URL', '$http', function (DSP_URL, $http) {
 
                         var requestDataObj = {
